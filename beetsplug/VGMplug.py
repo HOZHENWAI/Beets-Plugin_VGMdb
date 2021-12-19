@@ -249,7 +249,8 @@ class VGMdbPlugin(BeetsPlugin):
                                         bpm=None,
                                         initial_key=None,
                                         genre=None,
-                                        **optional_args))
+                                        #**optional_args
+                                        ))
 
 
         # Album Name
@@ -345,7 +346,7 @@ class VGMdbPlugin(BeetsPlugin):
                          original_day=None,
                          data_source=self.data_source,
                          data_url=albuminfo["vgmdb_link"],
-                         **optional_album
+                         # **optional_album
                          )
 
 
