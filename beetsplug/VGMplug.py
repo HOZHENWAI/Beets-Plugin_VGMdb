@@ -300,6 +300,9 @@ class VGMdbPlugin(BeetsPlugin):
         date = albuminfo["release_date"].split("-")
         if len(date)==3:
             year, month, day = date
+            year = int(year)
+            month = int(month)
+            day = int(day)
         else:
             year = None
             month = None
@@ -319,9 +322,9 @@ class VGMdbPlugin(BeetsPlugin):
                          asin=None,
                          albumtype=None,
                          va=va,
-                         year=int(year),
-                         month=int(month),
-                         day=int(day),
+                         year=year,
+                         month=month,
+                         day=day,
                          label=publisher,
                          mediums=len(albuminfo["discs"]),
                          artist_sort=None,
