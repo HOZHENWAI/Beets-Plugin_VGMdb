@@ -279,7 +279,7 @@ class VGMdbPlugin(BeetsPlugin):
 
         if not artist_found:
             if len(albuminfo["composers"])>0:
-                main_artist = albuminfo["composers"][0]["names"].items()[0]
+                main_artist = list(albuminfo["composers"][0]["names"].values())[0]
                 main_artist_id = albuminfo["composers"][0]["link"].split("/")[1] if "link" in albuminfo["composers"][
                     0].keys() else None
                 for lan in self.lang:
