@@ -296,7 +296,13 @@ class VGMdbPlugin(BeetsPlugin):
             optional_album.update({"arrangers": albuminfo["arrangers"]})
 
         # release date
-        year, month, day = albuminfo["release_date"].split("-")
+        date = albuminfo["release_date"].split("-")
+        if len(date)==3:
+            year, month, day = date
+        else:
+            year = None
+            month = None
+            day = None
 
         # label
         publisher = list(albuminfo["publisher"]["names"].values())[0]
