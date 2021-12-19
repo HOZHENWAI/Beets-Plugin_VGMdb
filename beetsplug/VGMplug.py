@@ -31,9 +31,6 @@ class VGMdbPlugin(MetadataSourcePlugin, BeetsPlugin):
     add_url = "https://vgmdb.net/db/collection.php?do=add"
     delete_url = "https://vgmdb.net/db/collection.php?do=manage&type=albums"
 
-    def commands(self):
-        raise NotImplementedError # TODO clean list, fetch_metadata, add_list
-
     def __init__(self):
         super(VGMdbPlugin, self).__init__()
 
