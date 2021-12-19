@@ -95,9 +95,9 @@ class VGMdbPlugin(MetadataSourcePlugin, BeetsPlugin):
                     }
                     req = requests.post(self.add_url,forms, cookies=self.cookies)
         except re_ex.RequestException as e:
-            self._log.error(e) # may do something else
+            self._log.exception("") # may do something else
         except Exception as e:
-            self._log.error(e)
+            self._log.exception("")
 
     def remove_vgmdb_list(self, album):
         try:
@@ -204,13 +204,15 @@ class VGMdbPlugin(MetadataSourcePlugin, BeetsPlugin):
         track_album_index = 0 # THIS IS BECAUSE TRACKS REQUIRE A MUSICBRAIN ID!
         for disc_index, disc in enumerate(albuminfo["discs"]):
             disc_length = disc["disc_length"]
-            for track_index, track in disc["tracks"]:
+            for track_index, track in enumerate(disc["tracks"]):
                 optional_args = {}
                 track_album_index +=1
 
                 track_l = track["track_length"].split(":")
-                track_length = 60*int(track_l[0])+int(track_l[1])
-
+                if len(track_l)>0:
+                    track_length = 60*int(track_l[0])+int(track_l[1])
+                else:
+                    track_length = None
                 track_title = track["names"].values()[0]
 
                 for lang in self.track_pref:
@@ -357,7 +359,7 @@ class VGMdbPlugin(MetadataSourcePlugin, BeetsPlugin):
         try:
             return self._search_vgmdbinfo(query)
         except Exception as e:
-            self._log.error(e)
+            self._log.exception("")
             return []
 
     def album_for_id(self, album_id:int) -> Optional[AlbumInfo]:
@@ -369,7 +371,7 @@ class VGMdbPlugin(MetadataSourcePlugin, BeetsPlugin):
         try:
             return self._album_vgmdbinfo(album_id)
         except Exception as e:
-            self._log.error(e)
+            self._log.exception("")
             return None
 
     # def _search_api(self, query_type, filters, keywords=''):
