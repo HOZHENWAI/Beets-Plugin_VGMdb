@@ -170,12 +170,12 @@ class VGMdbPlugin(BeetsPlugin):
         req = requests.get(f"{self.search_albums_url}{query}?format=json")
         items = req.json()
         albums = []
-        self._log.info(f"Found {len(items['results']['albums'])} albums on VGMdb")
+        # self._log.info(f"Found {len(items['results']['albums'])} albums on VGMdb")
         for album in items["results"]["albums"]:
             album_id = album["link"].split("/")[1]
             albums.append(self._album_vgmdbinfo(album_id))
             if len(albums) >=10:
-                self._log.info("Too many result on VGMDB, breaking")
+                # self._log.info("Too many result on VGMDB, breaking")
                 break
         return albums
 
