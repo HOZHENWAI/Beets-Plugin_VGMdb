@@ -39,7 +39,7 @@ class VGMdbPlugin(MetadataSourcePlugin, BeetsPlugin):
 
         self.config.add({'login': None,
                          'password': None,
-                         'lang-priority': 'en, ja-latn, ja',
+                         'lang-priority': 'en,ja-latn,ja',
                          'autoimport': True,
                          'autoremove': False,
                          'source_weight':0.0
