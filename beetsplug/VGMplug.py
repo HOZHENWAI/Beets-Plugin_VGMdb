@@ -10,7 +10,7 @@ from beets.autotag.hooks import AlbumInfo, TrackInfo, Distance, string_dist
 from beets.library import Item, Library, Album
 
 
-class VGMdbPlugin(MetadataSourcePlugin, BeetsPlugin):
+class VGMdbPlugin(BeetsPlugin):
     data_source = 'VGMdb' # MetadataSourcePlugin
 
     # Reference : https://vgmdb.info/
