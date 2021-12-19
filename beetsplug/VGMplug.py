@@ -267,7 +267,7 @@ class VGMdbPlugin(BeetsPlugin):
         if "performers" in albuminfo.keys():
             if len(albuminfo["performers"])>0:
                 artist_found = True
-                main_artist = albuminfo["performers"][0]["names"].items()[0]
+                main_artist = list(albuminfo["performers"][0]["names"].values())[0]
                 main_artist_id = albuminfo["performers"][0]["link"].split("/")[1] if "link" in albuminfo["performers"][0].keys() else None
                 for lan in self.lang:
                     if lan in albuminfo["performers"][0]["names"]:
