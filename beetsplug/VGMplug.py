@@ -127,13 +127,13 @@ class VGMdbPlugin(BeetsPlugin):
 
         if info.data_source == self.data_source:
             # check if there is many name, find the closed match
-            min_dist = 1
-            if "names" in info.keys():
-                for name in info["names"].values():
-                    name_dist = string_dist(item.title, name)
-                    if name_dist<min_dist:
-                        min_dist = name_dist
-                dist.add("best_track_title", min_dist)
+#             min_dist = 1
+#             if "names" in info.keys():
+#                 for name in info["names"].values():
+#                     name_dist = string_dist(item.title, name)
+#                     if name_dist<min_dist:
+#                         min_dist = name_dist
+#                 dist.add("best_track_title", min_dist)
             dist.add("source",self.source_weight)
         return dist
 
@@ -170,6 +170,7 @@ class VGMdbPlugin(BeetsPlugin):
         req = requests.get(f"{self.search_albums_url}{query}?format=json")
         items = req.json()
         albums = []
+        self._log.info(f"Found {len(items["results"]["albums"])} albums on VGMdb")
         for album in items["results"]["albums"]:
             album_id = album["link"].split("/")[1]
             albums.append(self._album_vgmdbinfo(album_id))
