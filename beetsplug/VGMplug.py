@@ -62,7 +62,7 @@ class VGMdbPlugin(MetadataSourcePlugin, BeetsPlugin):
             hash = hashlib.md5(self.config["password"].get().encode())
             md5 = hash.hexdigest()
             data = {
-                "vb_login_username":self.config["username"].get(),
+                "vb_login_username":self.config["login"].get(),
                 "cookieuser":"1",
                 "securitytoken":"guest",
                 "do":"login",
