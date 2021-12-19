@@ -213,7 +213,8 @@ class VGMdbPlugin(MetadataSourcePlugin, BeetsPlugin):
                     track_length = 60*int(track_l[0])+int(track_l[1])
                 else:
                     track_length = None
-                track_title = track["names"].values()[0]
+
+                track_title = list(track["names"].values())[0]
 
                 for lang in self.track_pref:
                     if lang in track["names"].keys():
@@ -298,7 +299,7 @@ class VGMdbPlugin(MetadataSourcePlugin, BeetsPlugin):
         year, month, day = albuminfo["release_date"].split("-")
 
         # label
-        publisher = albuminfo["publisher"]["names"].values()[0]
+        publisher = list(albuminfo["publisher"]["names"].values())[0]
         for lang in self.lang:
             if lang in albuminfo["publisher"]["names"].keys():
                 publisher = albuminfo["publisher"]["names"][lang]
