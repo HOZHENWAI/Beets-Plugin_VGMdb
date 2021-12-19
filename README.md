@@ -9,6 +9,7 @@ It can:
     - log to your vgmdb account and on album import (where the data source came from vgmdb) add the album to your account
 
 Config:
+
     "login": "ExampleLogin"
     
     "password": "ExamplePassword"
