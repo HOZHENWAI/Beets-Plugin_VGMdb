@@ -324,7 +324,7 @@ class VGMdbPlugin(MetadataSourcePlugin, BeetsPlugin):
                          language=None,
                          country=None,
                          style=None,
-                         genre=None,
+                         genre=albuminfo["category"],
                          albumstatus=None,
                          media=albuminfo["media_format"],
                          albumdisambig=None,
