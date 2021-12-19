@@ -9,11 +9,17 @@ It can:
     - log to your vgmdb account and on album import (where the data source came from vgmdb) add the album to your account
 
 Config:
+
     "login": "ExampleLogin"
+    
     "password": "ExamplePassword"
+    
     "lang-priority": 'en, ja-latn, ja'
+    
     "autoimport': True # VGMdb import require login and password set
+    
     "autoremove": False # on album remove, remove the album from your VGMdb account
+    
     "source_weight": 0.0
 
 Installation:
