@@ -4,7 +4,7 @@ import requests.exceptions as re_ex
 import hashlib
 import re
 
-from beets.plugins import BeetsPlugin, MetadataSourcePlugin
+from beets.plugins import BeetsPlugin
 from beets.ui import Subcommand
 from beets.autotag.hooks import AlbumInfo, TrackInfo, Distance, string_dist
 from beets.library import Item, Library, Album
