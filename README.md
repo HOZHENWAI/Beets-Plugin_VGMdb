@@ -10,10 +10,15 @@ It can:
 
 Config:
     "login": "ExampleLogin"
+    
     "password": "ExamplePassword"
+    
     "lang-priority": 'en, ja-latn, ja'
+    
     "autoimport': True # VGMdb import require login and password set
+    
     "autoremove": False # on album remove, remove the album from your VGMdb account
+    
     "source_weight": 0.0
 
 Installation:
