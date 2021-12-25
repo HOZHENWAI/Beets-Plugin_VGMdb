@@ -210,7 +210,7 @@ class VGMdbPlugin(BeetsPlugin):
                 track_album_index +=1
 
                 track_l = track["track_length"].split(":")
-                if len(track_l)>0:
+                if (len(track_l)>0) & (track_l!="Unknown"):
                     track_length = 60*int(track_l[0])+int(track_l[1])
                 else:
                     track_length = None
