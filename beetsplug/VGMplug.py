@@ -1,122 +1,73 @@
-from typing import Dict, List, Sequence, Optional
+from typing import Dict, List, Sequence, Optional, Iterable
 import requests
-import requests.exceptions as re_ex
-import hashlib
+import requests.exceptions
 import re
 
 from beets.plugins import BeetsPlugin
-from beets.ui import Subcommand
 from beets.autotag.hooks import AlbumInfo, TrackInfo, Distance, string_dist
-from beets.library import Item, Library, Album
+from beets.ui.commands import PromptChoice, input_
+from beets.autotag.match import Proposal, _add_candidate, _recommendation
 
+track_naming_convention = {"en": "English", "ja-latn": "Romaji", "ja": "Japanese"}
 
 class VGMdbPlugin(BeetsPlugin):
-    data_source = 'VGMdb' # MetadataSourcePlugin
+    data_source = 'VGMdb'  # MetadataSourcePlugin
 
-    # Reference : https://vgmdb.info/
-    search_items_url = "https://vgmdb.info/search/"
-    search_url = "https://vgmdb.info/search/" # MetadataSourcePlugin
+    search_url = "https://vgmdb.info/search/"
     search_albums_url = "https://vgmdb.info/search/albums/"
-    albums_url = "https://vgmdb.info/album/"
-    album_url = "https://vgmdb.info/album/" # MetadataSourcePlugin
-    search_artists_url = "https://vgmdb.info/search/artists/"
-    artists_url = "https://vgmdb.info/artist/"
-    search_orgs_url = "https://vgmdb.info/search/orgs/"
-    orgs_url = "https://vgmdb.info/org/"
-    search_product_url = "https://vgmdb.info/search/products/"
-    product_url = "https://vgmdb.info/product/"
-
-    # the main site: vgmdb.net
-    login_url = "https://vgmdb.net/forums/login.php"
-    add_url = "https://vgmdb.net/db/collection.php?do=add"
-    delete_url = "https://vgmdb.net/db/collection.php?do=manage&type=albums"
+    album_url = "https://vgmdb.info/album/"
 
     def __init__(self):
         super(VGMdbPlugin, self).__init__()
 
-        self.config.add({'login': None,
-                         'password': None,
-                         'lang-priority': 'en,ja-latn,ja',
-                         'autoimport': True,
-                         'autoremove': False,
-                         'source_weight':0.0
-                         })
+        self.config.add({
+            'lang-priority': 'en,ja-latn,ja',
+            'source_weight': 0.0
+        })
 
         self.source_weight = self.config['source_weight'].as_number()
         self.lang = self.config['lang-priority'].get().split(",")
-
-        track_naming_convention = {"en":"English", "ja-latn":"Romaji", "ja":"Japanese"}
         self.track_pref = [track_naming_convention[lang] for lang in self.lang]
-        self.cookies = None
+        self.register_listener("before_choose_candidate", self.before_choose_candidate_event)
 
-        if self.config["autoimport"].get():
-            self.register_listener("import_task_created", self.login) # Login here may be mistake inducing since
-            self.register_listener("album_imported", self.add_vgmdb_list)
+    def before_choose_candidate_event(self, session, task):
+        if task.is_album:
+            return [PromptChoice("v","type Vgmdb id", self.insert_manual_id),
+                    PromptChoice("q", "type vgmdb Query", self.custom_query)
+                    ]
 
-        if self.config["autoremove"].get():
-            self.register_listener("album_removed", self.remove_vgmdb_list)
+    def insert_manual_id(self, session, task):
+        """Get a new `Proposal` using a manually-entered ID.
+
+        Input an ID, either for an album ("release") or a track ("recording").
+        """
+        prompt = 'Enter {} ID:'.format('release' if task.is_album
+                                       else 'recording')
+        search_id = input_(prompt).strip()
+
+        candidates = {}
+        _add_candidate(task.items, candidates, self.album_for_id(search_id))
+        rec = _recommendation(list(candidates.values()))
+
+        return Proposal(list(candidates.values()), rec)
+
+    def custom_query(self, session, task):
+        """Get a new `Proposal` using a manually-entered ID.
+
+        Input an ID, either for an album ("release") or a track ("recording").
+        """
+        prompt = 'Enter {} query:'.format('release' if task.is_album
+                                       else 'recording')
+        query = input_(prompt).strip()
+
+        candidates = {}
+        _add_candidate(task.items, candidates, self._search_vgmdbinfo(query)[0]) # TODO add error handling
+        rec = _recommendation(list(candidates.values()))
+
+        return Proposal(list(candidates.values()), rec)
 
 
-    def login(self, task, session):
-        if (self.config["login"].get() is not None) and (self.config["password"].get() is not None):
-            hash = hashlib.md5(self.config["password"].get().encode())
-            md5 = hash.hexdigest()
-            data = {
-                "vb_login_username":self.config["login"].get(),
-                "cookieuser":"1",
-                "securitytoken":"guest",
-                "do":"login",
-                "vb_login_md5password":md5,
-                "vb_login_md5password_utf":md5
-            }
-            try:
-                log = requests.post(self.login_url, data)
-                if "vgmpassword" in log.cookies.keys():
-                    self.cookies = log.cookies
-                else:
-                    self._log.error("VGMdb Login Failed! Are you sure you have to correct password?")
-            except re_ex.RequestException as e:
-                self._log.error(e)
-
-    def clean_vgmdb_list(self):
-        raise NotImplementedError
-
-    def add_vgmdb_list(self, lib:Library, album:Album):
-        # Check for data_source
-        try:
-            if album._types["data_source"] == self.data_source:
-                if self.cookies is not None: # there is not check for cookies validity yet
-                    forms = {
-                        "formalbumids": album._fields["catalognum"], #alternatively : album._fields["id"]
-                        "formfield":"cn", #using the catalog number, alternatively "id"
-                        "formfolder":"0", # only on the base folder, can be an option
-                        "action":"addalbum",
-                        "add_album":"Add+Albums"
-                    }
-                    req = requests.post(self.add_url,forms, cookies=self.cookies)
-        except re_ex.RequestException as e:
-            self._log.exception("") # may do something else
-        except Exception as e:
-            self._log.exception("")
-
-    def remove_vgmdb_list(self, album):
-        try:
-            if album._types["data_source"] == self.data_source:
-                if self.cookies is not None:
-                    id = f"album{album._fields['id']}"
-                    forms = {
-                        id:"1",
-                        "action":"delete",
-                        "formfpmder":"0",
-                        "submit":"Submit"
-                    }
-                    req = requests.post(self.delete_url, forms, cookies=self.cookies)
-        except re_ex.RequestException as e:
-            self._log.error(e) # may do something else
-        except Exception as e:
-            self._log.error(e)
-
-    def track_distance(self, item: Item, info: TrackInfo) -> Distance:
+    def track_distance(self, item, info: TrackInfo) -> Distance:
         """
 
         :param item:
@@ -126,18 +77,17 @@ class VGMdbPlugin(BeetsPlugin):
         dist = Distance()
 
         if info.data_source == self.data_source:
-            # check if there is many name, find the closed match
-#             min_dist = 1
-#             if "names" in info.keys():
-#                 for name in info["names"].values():
-#                     name_dist = string_dist(item.title, name)
-#                     if name_dist<min_dist:
-#                         min_dist = name_dist
-#                 dist.add("best_track_title", min_dist)
+            min_dist = 1
+            for key in info.keys():
+                if key.startswith("vgmdb_track_name"):
+                    name_dist = string_dist(item.title, info[key])
+                    if name_dist<min_dist:
+                        min_dist = name_dist
+            dist.add("track_title", min_dist)
             dist.add("source",self.source_weight)
         return dist
 
-    def album_distance(self, items: List[Item], album_info: AlbumInfo, mapping:Dict) -> Distance:
+    def album_distance(self, items: List, album_info: AlbumInfo, mapping:Dict) -> Distance:
         """
 
         :param items:
@@ -150,68 +100,40 @@ class VGMdbPlugin(BeetsPlugin):
             dist.add("source",self.source_weight)
         return dist
 
-    def sanitize(self, title: str) -> str:
-        """
-        Clean text for VGMdb search as a simple date in the album title can negative positive result
-        :param title:
-        :return:
-        """
-        clean = re.sub(r'(?u)\W+', ' ', title)
-        clean = re.sub(r'(?i)\b(CD|disc)\s*\d+', '', clean)
-        self._log.debug(f"Title satinize: {title} -> {clean}")
-        return clean
-
-    def _search_vgmdbinfo(self, query:str):
+    def _search_vgmdbinfo(self, query: str):
         """
         VGMdb.info can only return Album level information as there are not track level information
         :param query:
         :return:
         """
-        req = requests.get(f"{self.search_albums_url}{query}?format=json")
-        items = req.json()
-        albums = []
-        # self._log.info(f"Found {len(items['results']['albums'])} albums on VGMdb")
-        for album in items["results"]["albums"]:
-            album_id = album["link"].split("/")[1]
-            albums.append(self._album_vgmdbinfo(album_id))
-            if len(albums) >=10:
-                # self._log.info("Too many result on VGMDB, breaking")
-                break
-        return albums
+        try:
+            req = requests.get(f"{self.search_albums_url}{query}?format=json")
+            items = req.json()
+            albums = []
+            self._log.debug(f"Found {len(items['results']['albums'])} albums on VGMdb for query: {query}")
+            for album in items["results"]["albums"]:
+                album_id = album["link"].split("/")[1]
+                albums.append(self.album_for_id(album_id))
+                if len(albums) >= 5:
+                    self._log.debug("Too many result on VGMDB, breaking")
+                    break
+            return albums
+        except requests.exceptions.RequestException:
+            self._log.exception()
+            return []
 
-    def _album_vgmdbinfo(self, id:int):
-        """
-        It does exactly what album for id does, we split into two since, there may be a need to implement an advanced search system (parsing for example date or artist in folder name)
-        :param id:
-        :return:
-        """
-        self._log.debug(f"Querying VgmDB for release {id}")
-        req = requests.get(f"{self.album_url}{id}?format=json")
-        url = f"{self.album_url}{id}"
-        vgmdbinfo = req.json()
-        return self.format_album_vgmdbinfo(vgmdbinfo, url=url)
-
-    def format_album_vgmdbinfo(self,albuminfo:Dict, url:Optional[str]=None)->AlbumInfo:
-        """
-
-        :param albuminfo:
-        :return:
-        """
-        
-        optional_album = {}
-        
-        # Tracks Info
+    def _format_track_info(self, albuminfo, url):
         tracks = []
-        track_album_index = 0 # THIS IS BECAUSE TRACKS REQUIRE A MUSICBRAIN ID!
+        track_album_index = 0
         for disc_index, disc in enumerate(albuminfo["discs"]):
             disc_length = disc["disc_length"]
             for track_index, track in enumerate(disc["tracks"]):
                 optional_args = {}
-                track_album_index +=1
+                track_album_index += 1
 
                 track_l = track["track_length"].split(":")
-                if (len(track_l)>0) & (track_l!="Unknown"):
-                    track_length = 60*int(track_l[0])+int(track_l[1])
+                if (len(track_l) > 0) & (track_l[0] != "Unknown"):
+                    track_length = 60 * int(track_l[0]) + int(track_l[1])
                 else:
                     track_length = None
 
@@ -220,14 +142,14 @@ class VGMdbPlugin(BeetsPlugin):
                 for lang in self.track_pref:
                     if lang in track["names"].keys():
                         track_title = track["names"][lang]
+                        optional_args.update({f"vgmdb_track_name_{lang}":track["names"][lang]})
                         break
-                optional_args.update({"names":track["names"]})
                 tracks.append(TrackInfo(title=track_title,
-                                        track_id=None, # Since we are not using musicbrainz
-                                        release_track_id=None, # Not sure what this is
+                                        track_id=None,
+                                        release_track_id=None,
                                         artist=None,
                                         artist_id=None,
-                                        length=float(track_length),
+                                        length=float(track_length) if track_length is not None else None,
                                         index=track_album_index,
                                         medium=disc_index,
                                         medium_index=track_index,
@@ -249,9 +171,29 @@ class VGMdbPlugin(BeetsPlugin):
                                         bpm=None,
                                         initial_key=None,
                                         genre=None,
-                                        #**optional_args
+                                        **optional_args
                                         ))
+        return tracks
 
+    def format_list_of_person(self, listofVGMPerson:List, typeofPerson:str):
+        out = {}
+        if "names" in listofVGMPerson[0].keys():
+            for lang in listofVGMPerson[0]["names"].keys():
+                out[f"{typeofPerson}_{lang}"] = ",".join([person["names"][lang] for person in listofVGMPerson  if lang in person["names"].keys()])
+        return out
+
+    def format_album_vgmdbinfo(self, albuminfo: Dict, url: Optional[str] = None) -> AlbumInfo:
+        """
+
+        :param albuminfo:
+        :return:
+        """
+
+        main_artist = None
+        main_artist_id = None
+
+        optional_album = {}
+        tracks = self._format_track_info(albuminfo, url)
 
         # Album Name
         album_name = albuminfo["name"]
@@ -262,25 +204,28 @@ class VGMdbPlugin(BeetsPlugin):
 
         # Album VGMdb ID
         album_id = albuminfo["link"].split("/")[1]
+        optional_album.update({"vgmdb_id": album_id})
 
         # Artist
         va = False
         artist_found = False
         if "performers" in albuminfo.keys():
-            if len(albuminfo["performers"])>0:
+            if len(albuminfo["performers"]) > 0:
                 artist_found = True
                 main_artist = list(albuminfo["performers"][0]["names"].values())[0]
-                main_artist_id = albuminfo["performers"][0]["link"].split("/")[1] if "link" in albuminfo["performers"][0].keys() else None
+                main_artist_id = albuminfo["performers"][0]["link"].split("/")[1] if "link" in albuminfo["performers"][
+                    0].keys() else None
                 for lan in self.lang:
                     if lan in albuminfo["performers"][0]["names"]:
                         main_artist = albuminfo["performers"][0]["names"][lan]
                         break
-                optional_album.update({"performers":albuminfo["performers"]})
-            if len(albuminfo["performers"])>1:
+                optional_album.update(self.format_list_of_person(albuminfo["performers"],"performers"))
+
+            if len(albuminfo["performers"]) > 1:
                 va = True
 
         if not artist_found:
-            if len(albuminfo["composers"])>0:
+            if len(albuminfo["composers"]) > 0:
                 main_artist = list(albuminfo["composers"][0]["names"].values())[0]
                 main_artist_id = albuminfo["composers"][0]["link"].split("/")[1] if "link" in albuminfo["composers"][
                     0].keys() else None
@@ -288,18 +233,18 @@ class VGMdbPlugin(BeetsPlugin):
                     if lan in albuminfo["composers"][0]["names"]:
                         main_artist = albuminfo["composers"][0]["names"][lan]
                         break
-                optional_album.update({"composers": albuminfo["composers"]})
+                optional_album.update(self.format_list_of_person(albuminfo["composers"],"composers"))
             else:
-                main_artist=None,
-                main_artist_id=None,
-            if len(albuminfo["composers"])>1:
+                main_artist = None,
+                main_artist_id = None,
+            if len(albuminfo["composers"]) > 1:
                 va = True
         if "arrangers" in albuminfo.keys():
-            optional_album.update({"arrangers": albuminfo["arrangers"]})
+            optional_album.update(self.format_list_of_person(albuminfo["arrangers"], "arrangers"))
 
         # release date
         date = albuminfo["release_date"].split("-")
-        if len(date)==3:
+        if len(date) == 3:
             year, month, day = date
             year = int(year)
             month = int(month)
@@ -317,7 +262,7 @@ class VGMdbPlugin(BeetsPlugin):
 
         return AlbumInfo(tracks=tracks,
                          album=album_name,
-                         album_id=album_id,
+                         album_id=f"vgmdb-{album_id}",
                          artist=main_artist,
                          artist_id=main_artist_id,
                          asin=None,
@@ -346,9 +291,19 @@ class VGMdbPlugin(BeetsPlugin):
                          original_day=None,
                          data_source=self.data_source,
                          data_url=albuminfo["vgmdb_link"],
-                         # **optional_album
+                         **optional_album
                          )
 
+    def sanitize(self, title: str) -> str:
+        """
+        Clean text for VGMdb search as a simple date in the album title can negative positive result
+        :param title:
+        :return:
+        """
+        clean = re.sub(r'(?u)\W+', ' ', title)
+        clean = re.sub(r'(?i)\b(CD|disc)\s*\d+', '', clean)
+        self._log.debug(f"Title satinize: {title} -> {clean}")
+        return clean
 
     def candidates(self, items: List[str], artist: str, album: str, va_likely: bool, extra_tags=None) -> Sequence[
         AlbumInfo]:
@@ -362,29 +317,35 @@ class VGMdbPlugin(BeetsPlugin):
         :return:
         """
         self._log.debug(f"Searching for candidate in VGMdb for {album}")
-        cleaned_album = self.sanitize(album)
-        cleaned_artist = self.sanitize(artist)
-        if va_likely:
-            query = cleaned_album  # also the name of the folder
-        else:
-            query = f"{cleaned_artist} {cleaned_album}"
-        try:
-            return self._search_vgmdbinfo(query)
-        except Exception as e:
-            self._log.exception("")
-            return []
+        albums = []
+        queries = self._format_query(artist, album, va_likely)
 
-    def album_for_id(self, album_id:int) -> Optional[AlbumInfo]:
+        for query in queries:
+            albums += self._search_vgmdbinfo(query)
+        return albums
+
+    def _format_query(self, artist, album, va_likely)->Iterable:
         """
 
-        :param album_id:
+        :param artist:
+        :param album:
+        :param va_likely:
         :return:
         """
-        try:
-            return self._album_vgmdbinfo(album_id)
-        except Exception as e:
-            self._log.exception("")
-            return None
+        return [self.sanitize(text) for text in album.split(" -")]
 
-    # def _search_api(self, query_type, filters, keywords=''):
-    #     pass
+    def album_for_id(self, album_id: int) -> Optional[AlbumInfo]:
+        """
+        Take a VGMdb id and return an AlbumInfo object
+        :param album_id: the album id in vgmdb
+        :return: an albuminfo object
+        """
+        self._log.debug(f"Querying VgmDB for release {album_id}")
+        try:
+            req = requests.get(f"{self.album_url}{album_id}?format=json")
+            url = f"{self.album_url}{album_id}"
+            vgmdbinfo = req.json()
+            return self.format_album_vgmdbinfo(vgmdbinfo, url=url)
+        except requests.exceptions.RequestException:
+            self._log.exception("Network Problem")
+            return None

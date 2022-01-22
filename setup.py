@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name="beets-vgmdb",
-      version="1.0.0",
+      version="1.1.0",
       description=" Beets VGMdb metadata plugin and collection manager",
       long_description=open('README.md').read(),
       author= "HO Zhen Wai Olivier",
