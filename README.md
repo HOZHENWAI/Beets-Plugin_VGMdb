@@ -17,6 +17,7 @@ VGMplug Config:
 
     
 VGMCollection config:
+
     "username": "ExampleLogin"
     
     "password": "ExamplePassword"
