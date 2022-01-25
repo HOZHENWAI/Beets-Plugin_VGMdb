@@ -3,3 +3,4 @@ pytest
 pathlib
 beets
 beautifulsoup4
+lxml
