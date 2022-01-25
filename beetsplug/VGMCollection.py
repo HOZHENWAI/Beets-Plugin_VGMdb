@@ -56,11 +56,12 @@ class VGMdbCollection(BeetsPlugin):
                     self.add_album(album["catalognum"], self.album_catalog_number)
 
     def album_removed(self, lib, album):
-        if album["data_source"] == self.data_source:
-            albums = self._get_albums_in_collection()
-            for al in albums:
-                if al["catalog_number"] == album["catalognum"]:
-                    self.remove_album(al["collection_ref"])
+        if "data_source" in album.keys():
+            if album["data_source"] == self.data_source:
+                albums = self._get_albums_in_collection()
+                for al in albums:
+                    if al["catalog_number"] == album["catalognum"]:
+                        self.remove_album(al["collection_ref"])
 
     def sanitize_folder(self):
         self.folder_id = None
