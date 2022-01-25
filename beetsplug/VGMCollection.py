@@ -49,10 +49,11 @@ class VGMdbCollection(BeetsPlugin):
         self._collections_cache = []
 
     def album_imported(self, lib, album):
-        if album["data_source"] == self.data_source:
-            albums = self._get_albums_in_collection()
-            if album["catalognum"] not in [al["catalog_number"] for al in albums]:
-                self.add_album(album["catalognum"], self.album_catalog_number)
+        if "data_source" in album.keys():
+            if album["data_source"] == self.data_source:
+                albums = self._get_albums_in_collection()
+                if album["catalognum"] not in [al["catalog_number"] for al in albums]:
+                    self.add_album(album["catalognum"], self.album_catalog_number)
 
     def album_removed(self, lib, album):
         if album["data_source"] == self.data_source:
