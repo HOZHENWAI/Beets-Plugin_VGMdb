@@ -1,0 +1,5 @@
+{
+  "login": [],
+  "add": [{"catalog_or_id": "LACA-5140 ", "nb_type": "cn"},{"catalog_or_id": "8078", "nb_type": "id"}],
+  "remove": [{"catalog_or_id": "24439", "nb_type": "id"}, {"catalog_or_id": "JDCA-29194", "nb_type": "cn"}]
+}

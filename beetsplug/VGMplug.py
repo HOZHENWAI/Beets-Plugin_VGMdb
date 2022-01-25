@@ -177,9 +177,10 @@ class VGMdbPlugin(BeetsPlugin):
 
     def format_list_of_person(self, listofVGMPerson:List, typeofPerson:str):
         out = {}
-        if "names" in listofVGMPerson[0].keys():
-            for lang in listofVGMPerson[0]["names"].keys():
-                out[f"{typeofPerson}_{lang}"] = ",".join([person["names"][lang] for person in listofVGMPerson  if lang in person["names"].keys()])
+        if len(listofVGMPerson)>0:
+            if "names" in listofVGMPerson[0].keys():
+                for lang in listofVGMPerson[0]["names"].keys():
+                    out[f"{typeofPerson}_{lang}"] = ",".join([person["names"][lang] for person in listofVGMPerson  if lang in person["names"].keys()])
         return out
 
     def format_album_vgmdbinfo(self, albuminfo: Dict, url: Optional[str] = None) -> AlbumInfo:
@@ -255,7 +256,7 @@ class VGMdbPlugin(BeetsPlugin):
             day = None
 
         # label
-        publisher = list(albuminfo["publisher"]["names"].values())[0]
+        publisher = list(albuminfo["publisher"]["names"].values())[0] if len(albuminfo["publisher"]["names"])>0 else None
         for lang in self.lang:
             if lang in albuminfo["publisher"]["names"].keys():
                 publisher = albuminfo["publisher"]["names"][lang]
