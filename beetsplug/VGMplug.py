@@ -118,8 +118,8 @@ class VGMdbPlugin(BeetsPlugin):
                     self._log.debug("Too many result on VGMDB, breaking")
                     break
             return albums
-        except requests.exceptions.RequestException:
-            self._log.exception()
+        except requests.exceptions.RequestException as e:
+            self._log.exception("Something really wrong happened")
             return []
 
     def _format_track_info(self, albuminfo, url):
@@ -333,7 +333,7 @@ class VGMdbPlugin(BeetsPlugin):
         :param va_likely:
         :return:
         """
-        return [self.sanitize(text) for text in album.split(" -")]
+        return [self.sanitize(text) for text in album.split(" -") if len(self.sanitize(text))>0]
 
     def album_for_id(self, album_id: int) -> Optional[AlbumInfo]:
         """
