@@ -149,8 +149,9 @@ class VGMdbCollection(BeetsPlugin):
 
         album_catalogs = []
         for album in album_list:
-            if album["data_source"]== self.data_source:
-                album_catalogs.append(album["catalognum"])
+            if "data_source" in album.keys():
+                if album["data_source"]== self.data_source:
+                    album_catalogs.append(album["catalognum"])
 
         to_add = [catalog for catalog in album_catalogs if catalog not in [al["catalog_number"] for al in vgm_albums]]
         self.add_album(to_add, self.album_catalog_number)
