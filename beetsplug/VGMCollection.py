@@ -141,7 +141,7 @@ class VGMdbCollection(BeetsPlugin):
 
     def update_collection(self,lib, opts, args):
         self.config.set_args(opts)
-        remove_missing = self.config['remove'].get(bool)
+        remove_missing = self.config['on_remove'].get(bool)
         self.update_album_list(lib, lib.albums(), remove_missing)
 
     def update_album_list(self,lib, album_list, remove_missing=False):
