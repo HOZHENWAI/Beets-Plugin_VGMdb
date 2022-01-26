@@ -49,18 +49,15 @@ class VGMdbCollection(BeetsPlugin):
         self._collections_cache = []
 
     def album_imported(self, lib, album):
-        self._log.debug("Trying to import to vgmdb")
-        if album.data_source == self.data_source:
-            albums = self._get_albums_in_collection()
-            if album.catalognum not in [al["catalog_number"] for al in albums]:
-                self.add_album(album.catalognum, self.album_catalog_number)
+        albums = self._get_albums_in_collection()
+        if album.catalognum not in [al["catalog_number"] for al in albums]:
+            self.add_album(album.catalognum, self.album_catalog_number)
 
     def album_removed(self, lib, album):
-        if album.data_source == self.data_source:
-            albums = self._get_albums_in_collection()
-            for al in albums:
-                if al["catalog_number"] == album.catalognum:
-                    self.remove_album(al["collection_ref"])
+        albums = self._get_albums_in_collection()
+        for al in albums:
+            if al["catalog_number"] == album.catalognum:
+                self.remove_album(al["collection_ref"])
 
     def sanitize_folder(self):
         self.folder_id = None
@@ -149,9 +146,7 @@ class VGMdbCollection(BeetsPlugin):
 
         album_catalogs = []
         for album in album_list:
-            if "data_source" in album.keys():
-                if album["data_source"]== self.data_source:
-                    album_catalogs.append(album["catalognum"])
+            album_catalogs.append(album["catalognum"])
 
         to_add = [catalog for catalog in album_catalogs if catalog not in [al["catalog_number"] for al in vgm_albums]]
         self.add_album(to_add, self.album_catalog_number)
