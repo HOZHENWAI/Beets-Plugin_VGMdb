@@ -50,19 +50,17 @@ class VGMdbCollection(BeetsPlugin):
 
     def album_imported(self, lib, album):
         self._log.debug("Trying to import to vgmdb")
-        self._log.info("Trying to import to vgmdb")
-        if album["data_source"] == self.data_source:
+        if album.data_source == self.data_source:
             albums = self._get_albums_in_collection()
-            if album["catalognum"] not in [al["catalog_number"] for al in albums]:
-                self.add_album(album["catalognum"], self.album_catalog_number)
+            if album.catalognum not in [al["catalog_number"] for al in albums]:
+                self.add_album(album.catalognum, self.album_catalog_number)
 
     def album_removed(self, lib, album):
-        if "data_source" in album.keys():
-            if album["data_source"] == self.data_source:
-                albums = self._get_albums_in_collection()
-                for al in albums:
-                    if al["catalog_number"] == album["catalognum"]:
-                        self.remove_album(al["collection_ref"])
+        if album.data_source == self.data_source:
+            albums = self._get_albums_in_collection()
+            for al in albums:
+                if al["catalog_number"] == album.catalognum:
+                    self.remove_album(al["collection_ref"])
 
     def sanitize_folder(self):
         self.folder_id = None
