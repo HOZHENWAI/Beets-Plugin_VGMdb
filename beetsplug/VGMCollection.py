@@ -143,6 +143,7 @@ class VGMdbCollection(BeetsPlugin):
         self.config.set_args(opts)
         remove_missing = self.config['on_remove'].get(bool)
         self.update_album_list(lib, lib.albums(), remove_missing)
+        self._log.info("Finished updating vgmdb collection")
 
     def update_album_list(self,lib, album_list, remove_missing=False):
         vgm_albums = self._get_albums_in_collection()
@@ -183,6 +184,8 @@ class VGMdbCollection(BeetsPlugin):
                 if "vgmpassword" not in self.session.cookies.keys():
                     self._log.error("VGMdb Login Failed! Are you sure you have to correct password?")
                     raise LoginError
+                else:
+                    self._log.info("Successfully logged into VGMdb")
             except requests.exceptions.RequestException as e:
                 self._log.exception(e)
         else:
