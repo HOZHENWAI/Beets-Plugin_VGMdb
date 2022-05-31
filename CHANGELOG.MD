@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 Here we would have the update steps for 1.1.2 for people to follow.
 
 ```
-pip install --ignored-installed https://github.com/HOZHENWAI/Beets-Plugin_VGMdb
+pip install --ignore-installed https://github.com/HOZHENWAI/Beets-Plugin_VGMdb
 ```
 ### Added
 
