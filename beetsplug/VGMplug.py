@@ -190,7 +190,7 @@ class VGMdbPlugin(BeetsPlugin):
         :return:
         """
 
-        main_artist = None
+        main_artist = ""
         main_artist_id = None
 
         optional_album = {}
@@ -210,36 +210,38 @@ class VGMdbPlugin(BeetsPlugin):
         # Artist
         va = False
         artist_found = False
-        if "performers" in albuminfo.keys():
-            if len(albuminfo["performers"]) > 0:
-                artist_found = True
-                main_artist = list(albuminfo["performers"][0]["names"].values())[0]
-                main_artist_id = albuminfo["performers"][0]["link"].split("/")[1] if "link" in albuminfo["performers"][
-                    0].keys() else None
-                for lan in self.lang:
-                    if lan in albuminfo["performers"][0]["names"]:
-                        main_artist = albuminfo["performers"][0]["names"][lan]
-                        break
-                optional_album.update(self.format_list_of_person(albuminfo["performers"],"performers"))
 
-            if len(albuminfo["performers"]) > 1:
-                va = True
+        if len(albuminfo["composers"]) > 0:
+            artist_found = True
+            main_artist = list(albuminfo["composers"][0]["names"].values())[0]
+            main_artist_id = albuminfo["composers"][0]["link"].split("/")[1] if "link" in albuminfo["composers"][
+                0].keys() else None
+            for lan in self.lang:
+                if lan in albuminfo["composers"][0]["names"]:
+                    main_artist = albuminfo["composers"][0]["names"][lan]
+                    break
+            optional_album.update(self.format_list_of_person(albuminfo["composers"],"composers"))
+        else:
+            main_artist = "",
+            main_artist_id = None,
+        if len(albuminfo["composers"]) > 1:
+            va = True
 
         if not artist_found:
-            if len(albuminfo["composers"]) > 0:
-                main_artist = list(albuminfo["composers"][0]["names"].values())[0]
-                main_artist_id = albuminfo["composers"][0]["link"].split("/")[1] if "link" in albuminfo["composers"][
-                    0].keys() else None
-                for lan in self.lang:
-                    if lan in albuminfo["composers"][0]["names"]:
-                        main_artist = albuminfo["composers"][0]["names"][lan]
-                        break
-                optional_album.update(self.format_list_of_person(albuminfo["composers"],"composers"))
-            else:
-                main_artist = None,
-                main_artist_id = None,
-            if len(albuminfo["composers"]) > 1:
-                va = True
+            if "performers" in albuminfo.keys():
+                if len(albuminfo["performers"]) > 0:
+                    main_artist = list(albuminfo["performers"][0]["names"].values())[0]
+                    main_artist_id = albuminfo["performers"][0]["link"].split("/")[1] if "link" in albuminfo["performers"][
+                        0].keys() else None
+                    for lan in self.lang:
+                        if lan in albuminfo["performers"][0]["names"]:
+                            main_artist = albuminfo["performers"][0]["names"][lan]
+                            break
+                    optional_album.update(self.format_list_of_person(albuminfo["performers"],"performers"))
+
+                if len(albuminfo["performers"]) > 1:
+                    va = True
+
         if "arrangers" in albuminfo.keys():
             optional_album.update(self.format_list_of_person(albuminfo["arrangers"], "arrangers"))
 
