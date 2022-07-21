@@ -222,8 +222,8 @@ class VGMdbPlugin(BeetsPlugin):
                     break
             optional_album.update(self.format_list_of_person(albuminfo["composers"],"composers"))
         else:
-            main_artist = "",
-            main_artist_id = None,
+            main_artist = ""
+            main_artist_id = None
         if len(albuminfo["composers"]) > 1:
             va = True
 
