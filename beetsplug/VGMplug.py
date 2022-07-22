@@ -25,6 +25,10 @@ class VGMdbPlugin(BeetsPlugin):
             'source_weight': 0.0
         })
 
+        self.config.add({
+            'artist-priority': 'composers,performers,arrangers'
+        })
+        self.artist_priority = self.config['artist-priority'].get().split(',')
         self.source_weight = self.config['source_weight'].as_number()
         self.lang = self.config['lang-priority'].get().split(",")
         self.track_pref = [track_naming_convention[lang] for lang in self.lang]
@@ -36,6 +40,28 @@ class VGMdbPlugin(BeetsPlugin):
                     PromptChoice("q", "type vgmdb Query", self.custom_query)
                     ]
 
+    def parse_vgmdbinfo_artist(self,albuminfo, key,optional_album):
+        self._log.info(f'Completing artist info using {key}')
+        artist_found=False
+        va=False
+        if len(albuminfo[key]) > 0:
+            self._log.info(f'Found {len(albuminfo[key])} {key}')
+            artist_found = True
+            main_artist = list(albuminfo[key][0]["names"].values())[0]
+            main_artist_id = albuminfo[key][0]["link"].split("/")[1] if "link" in albuminfo[key][
+                0].keys() else None
+            for lan in self.lang:
+                if lan in albuminfo[key][0]["names"]:
+                    main_artist = albuminfo[key][0]["names"][lan]
+                    self._log.info(f'Final artist choice is {main_artist}')
+                    break
+            optional_album.update(self.format_list_of_person(albuminfo[key], key))
+        else:
+            main_artist = ""
+            main_artist_id = None
+        if len(albuminfo["composers"]) > 1:
+            va = True
+        return artist_found, main_artist, main_artist_id, va
     def insert_manual_id(self, session, task):
         """Get a new `Proposal` using a manually-entered ID.
 
@@ -192,7 +218,7 @@ class VGMdbPlugin(BeetsPlugin):
 
         main_artist = ""
         main_artist_id = None
-
+        va = False
         optional_album = {}
         tracks = self._format_track_info(albuminfo, url)
 
@@ -208,42 +234,10 @@ class VGMdbPlugin(BeetsPlugin):
         optional_album.update({"vgmdb_id": album_id})
 
         # Artist
-        va = False
-        artist_found = False
-
-        if len(albuminfo["composers"]) > 0:
-            artist_found = True
-            main_artist = list(albuminfo["composers"][0]["names"].values())[0]
-            main_artist_id = albuminfo["composers"][0]["link"].split("/")[1] if "link" in albuminfo["composers"][
-                0].keys() else None
-            for lan in self.lang:
-                if lan in albuminfo["composers"][0]["names"]:
-                    main_artist = albuminfo["composers"][0]["names"][lan]
-                    break
-            optional_album.update(self.format_list_of_person(albuminfo["composers"],"composers"))
-        else:
-            main_artist = ""
-            main_artist_id = None
-        if len(albuminfo["composers"]) > 1:
-            va = True
-
-        if not artist_found:
-            if "performers" in albuminfo.keys():
-                if len(albuminfo["performers"]) > 0:
-                    main_artist = list(albuminfo["performers"][0]["names"].values())[0]
-                    main_artist_id = albuminfo["performers"][0]["link"].split("/")[1] if "link" in albuminfo["performers"][
-                        0].keys() else None
-                    for lan in self.lang:
-                        if lan in albuminfo["performers"][0]["names"]:
-                            main_artist = albuminfo["performers"][0]["names"][lan]
-                            break
-                    optional_album.update(self.format_list_of_person(albuminfo["performers"],"performers"))
-
-                if len(albuminfo["performers"]) > 1:
-                    va = True
-
-        if "arrangers" in albuminfo.keys():
-            optional_album.update(self.format_list_of_person(albuminfo["arrangers"], "arrangers"))
+        for key in self.artist_priority:
+            artist_found, main_artist, main_artist_id, va = self.parse_vgmdbinfo_artist(albuminfo,key,optional_album)
+            if artist_found:
+                break
 
         # release date
         date = albuminfo["release_date"].split("-")

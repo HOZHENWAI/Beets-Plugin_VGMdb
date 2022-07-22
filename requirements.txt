@@ -1,6 +1,6 @@
 requests
 pytest
 pathlib
-beets
+beets>=1.6.0
 beautifulsoup4
 lxml

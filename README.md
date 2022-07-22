@@ -16,7 +16,7 @@ VGMplug Config:
     
     "source_weight": 0.0
     
-
+    "artist-priority" : "composers,performers,arrangers"
     
 VGMCollection config:
 

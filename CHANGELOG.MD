@@ -25,6 +25,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
  
 [comment]: <> (### Fixed)
  
+## [1.2.0] - 22-07-2022
+  
+Here we would have the update steps for 1.2.0 for people to follow.
+
+```
+pip install --ignore-installed https://github.com/HOZHENWAI/Beets-Plugin_VGMdb
+```
+### Added
+
+- Nothing
+
+### Changed
+  
+- [Beets-Plugin_VGMdb]
+  Artist priority is now definable in the config with the key artist-priority, it expect a comma seperated string 
+ 
+### Fixed
+ 
+- [Beets-Plugin_VGMdb]
+  Bug when no artist information could be found using vgmdb.info api.
+  
+
 ## [1.1.2] - 31-05-2022
   
 Here we would have the update steps for 1.1.2 for people to follow.
