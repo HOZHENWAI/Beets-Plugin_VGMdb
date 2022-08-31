@@ -28,9 +28,9 @@ class VGMdbPlugin(BeetsPlugin):
         self.config.add({
             'artist-priority': 'composers,performers,arrangers'
         })
-        self.artist_priority = self.config['artist-priority'].get().split(',')
+        self.artist_priority = self.config['artist-priority'].get().replace(' ','').split(',')
         self.source_weight = self.config['source_weight'].as_number()
-        self.lang = self.config['lang-priority'].get().split(",")
+        self.lang = self.config['lang-priority'].get().replace(' ','').split(",")
         self.track_pref = [track_naming_convention[lang] for lang in self.lang]
         self.register_listener("before_choose_candidate", self.before_choose_candidate_event)
 
@@ -169,7 +169,7 @@ class VGMdbPlugin(BeetsPlugin):
                     if lang in track["names"].keys():
                         track_title = track["names"][lang]
                         optional_args.update({f"vgmdb_track_name_{lang}":track["names"][lang]})
-                        break
+                        continue
                 tracks.append(TrackInfo(title=track_title,
                                         track_id=None,
                                         release_track_id=None,
