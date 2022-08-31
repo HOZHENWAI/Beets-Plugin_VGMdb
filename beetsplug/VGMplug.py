@@ -164,9 +164,11 @@ class VGMdbPlugin(BeetsPlugin):
                     track_length = None
 
                 track_title = list(track["names"].values())[0]
-
+                favorite_lang_not_found = True
                 for lang in track["names"].keys():
-                    track_title = track["names"][lang]
+                    if (lang in self.lang) & favorite_lang_not_found:
+                        favorite_lang_not_found = False
+                        track_title = track["names"][lang]
                     optional_args.update({f"vgmdb_track_name_{lang}":track["names"][lang]})
 
                 tracks.append(TrackInfo(title=track_title,
