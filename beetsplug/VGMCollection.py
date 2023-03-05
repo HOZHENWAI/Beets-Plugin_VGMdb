@@ -90,9 +90,7 @@ class VGMdbCollection(BeetsPlugin):
         self.session.post(self.add_url, forms, cookies=self.session.cookies)
 
     def _get_collections(self):
-        collection_request = self.session.get(
-            self.collection_view, cookies=self.session.cookies
-        )
+        collection_request = self.session.get(self.collection_view, cookies=self.session.cookies)
         soup = BeautifulSoup(collection_request.text, "lxml")
         mycollection = soup.find("ul", {"class": "treeview"})
         listofCollection = []
@@ -110,18 +108,14 @@ class VGMdbCollection(BeetsPlugin):
         return title, vgmdb_id, catalog_number, album_soup["ref"]
 
     def _get_albums_in_collection(self):
-        collection_request = self.session.get(
-            self.collection_view, cookies=self.session.cookies
-        )
+        collection_request = self.session.get(self.collection_view, cookies=self.session.cookies)
         soup = BeautifulSoup(collection_request.text, "lxml")
         mycollection = soup.find("ul", {"class": "treeview"})
         myalbums = []
         for collection_name, collection_id in self._collections_cache:
             collection_soup = mycollection.find("li", {"ref": collection_id})
             for album_soup in collection_soup.find_all("li"):
-                title, vgmdb_id, catalog_number, collection_ref = self.format_album(
-                    album_soup
-                )
+                title, vgmdb_id, catalog_number, collection_ref = self.format_album(album_soup)
                 myalbums.append(
                     {
                         "title": title,
@@ -133,12 +127,8 @@ class VGMdbCollection(BeetsPlugin):
                 )
         # root album
         if mycollection is not None:
-            for album_soup in mycollection.findChildren(
-                "li", {"class": None}, recursive=False
-            ):
-                title, vgmdb_id, catalog_number, collection_ref = self.format_album(
-                    album_soup
-                )
+            for album_soup in mycollection.findChildren("li", {"class": None}, recursive=False):
+                title, vgmdb_id, catalog_number, collection_ref = self.format_album(album_soup)
                 myalbums.append(
                     {
                         "title": title,

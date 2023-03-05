@@ -20,19 +20,15 @@ class VGMdbPlugin(BeetsPlugin):
 
     def __init__(self):
         super(VGMdbPlugin, self).__init__()
-        self._log.setLevel('ERROR')
+        self._log.setLevel("ERROR")
         self.config.add({"lang-priority": "en,ja-latn,ja", "source_weight": 0.0})
 
         self.config.add({"artist-priority": "composers,performers,arrangers"})
-        self.artist_priority = (
-            self.config["artist-priority"].get().replace(" ", "").split(",")
-        )
+        self.artist_priority = self.config["artist-priority"].get().replace(" ", "").split(",")
         self.source_weight = self.config["source_weight"].as_number()
         self.lang = self.config["lang-priority"].get().replace(" ", "").split(",")
         self.track_pref = [TRACK_NAME_CONVENTION[lang] for lang in self.lang]
-        self.register_listener(
-            "before_choose_candidate", self.before_choose_candidate_event
-        )
+        self.register_listener("before_choose_candidate", self.before_choose_candidate_event)
 
     def before_choose_candidate_event(self, session, task):
         if task.is_album:
@@ -117,9 +113,7 @@ class VGMdbPlugin(BeetsPlugin):
             dist.add("source", self.source_weight)
         return dist
 
-    def album_distance(
-        self, items: List, album_info: AlbumInfo, mapping: Dict
-    ) -> Distance:
+    def album_distance(self, items: List, album_info: AlbumInfo, mapping: Dict) -> Distance:
         """
 
         :param items:
@@ -182,9 +176,7 @@ class VGMdbPlugin(BeetsPlugin):
                         track_title = track["names"][lang]
                         break
                 for lang in track["names"].keys():
-                    optional_args.update(
-                        {f"vgmdb_track_name_{lang}": track["names"][lang]}
-                    )
+                    optional_args.update({f"vgmdb_track_name_{lang}": track["names"][lang]})
 
                 tracks.append(
                     TrackInfo(
@@ -193,9 +185,7 @@ class VGMdbPlugin(BeetsPlugin):
                         release_track_id=None,
                         artist=None,
                         artist_id=None,
-                        length=float(track_length)
-                        if track_length is not None
-                        else None,
+                        length=float(track_length) if track_length is not None else None,
                         index=track_album_index,
                         medium=disc_index + 1,
                         medium_index=track_index + 1,
@@ -236,9 +226,7 @@ class VGMdbPlugin(BeetsPlugin):
                     )
         return out
 
-    def format_album_vgmdbinfo(
-        self, albuminfo: Dict, url: Optional[str] = None
-    ) -> AlbumInfo:
+    def format_album_vgmdbinfo(self, albuminfo: Dict, url: Optional[str] = None) -> AlbumInfo:
         """
 
         :param albuminfo:
@@ -371,11 +359,7 @@ class VGMdbPlugin(BeetsPlugin):
         :param va_likely:
         :return:
         """
-        return [
-            self.sanitize(text)
-            for text in album.split(" -")
-            if len(self.sanitize(text)) > 0
-        ]
+        return [self.sanitize(text) for text in album.split(" -") if len(self.sanitize(text)) > 0]
 
     def album_for_id(self, album_id: int) -> Optional[AlbumInfo]:
         """
