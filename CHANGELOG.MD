@@ -24,8 +24,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 [comment]: <> (### Changed)
  
 [comment]: <> (### Fixed)
+## [1.2.4] - 05-03-2022 
+Bugfix: Solved some blocking issues with the plugins.
+
 ## [1.2.3] - 31-08-2022 
-Bugfix: language not being properly using to select title
+Bugfix: language not being properly used to select title
 
 ## [1.2.2] - 31-08-2022 
 Fixed:
