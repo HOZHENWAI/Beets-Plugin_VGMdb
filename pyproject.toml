@@ -10,6 +10,9 @@ description = "Beets VGMdb metadata plugin and collection manager."
 readme = "README.md"
 dynamic = ["dependencies"]
 
+[project.urls]
+Source = "https://github.com/HOZHENWAI/Beets-Plugin_VGMdb"
+
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
 
