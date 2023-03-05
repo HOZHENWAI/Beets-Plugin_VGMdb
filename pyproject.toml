@@ -9,7 +9,6 @@ authors = [{name="HO ZhenWai Olivier", email="hozhenwai@gmail.com"}]
 description = "Beets VGMdb metadata plugin and collection manager."
 readme = "README.md"
 dynamic = ["dependencies"]
-urls = "https://github.com/HOZHENWAI/Beets-Plugin_VGMdb"
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
