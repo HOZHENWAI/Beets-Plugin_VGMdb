@@ -1,5 +1,4 @@
 requests
-pytest
 pathlib
 beets>=1.6.0
 beautifulsoup4

@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "beets-vgmdb"
+version = "1.2.4"
+authors = [{name="HO ZhenWai Olivier", email="hozhenwai@gmail.com"}]
+description = "Beets VGMdb metadata plugin and collection manager."
+readme = "README.md"
+dynamic = ["dependencies"]
+urls = "https://github.com/HOZHENWAI/Beets-Plugin_VGMdb"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --cov src"
+testpaths = ["tests",]
+required_plugins = ["pytest-cov"]
+
+[tool.coverage.report]
+exclude_lines = [
+    # Have to re-enable the standard pragma
+    "pragma: no cover",
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise NotImplementedError",
+    "raise Assertion Error",
+    # Don't complain if non-runnable code isn't run:
+    "if 0:",
+    "if __name__ == .__main__.:",
+]
+fail_under = 0
+show_missing = true
+skip_empty = true
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.pylint.messages_control]
+max-line-length = 100
+max-module-lines = 500
