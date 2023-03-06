@@ -141,7 +141,9 @@ class VGMdbPlugin(BeetsPlugin):
             )
             for album in items["results"]["albums"]:
                 album_id = album["link"].split("/")[1]
-                albums.append(self.album_for_id(album_id))
+                candidate_album = self.album_for_id(album_id)
+                if candidate_album is not None:
+                    albums.append(candidate_album)
                 if len(albums) >= 5:
                     self._log.debug("Too many result on VGMDB, breaking")
                     break
