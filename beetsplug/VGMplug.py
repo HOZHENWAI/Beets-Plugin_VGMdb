@@ -152,7 +152,7 @@ class VGMdbPlugin(BeetsPlugin):
             self._log.error(f"Chunked Encoding Exception: {query}")
         except requests.exceptions.JSONDecodeError:
             self._log.error(f"Json Decode Error: {query}")
-            return []
+        return []
 
     def _format_track_info(self, albuminfo, url):
         tracks = []
