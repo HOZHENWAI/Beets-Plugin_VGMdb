@@ -72,10 +72,15 @@ class VGMdbPlugin(BeetsPlugin):
         search_id = input_(prompt).strip()
 
         candidates = {}
-        _add_candidate(task.items, candidates, self.album_for_id(search_id))
-        rec = _recommendation(list(candidates.values()))
 
-        return Proposal(list(candidates.values()), rec)
+        custom_album = self.album_for_id(search_id)
+        if custom_album is not None:
+            _add_candidate(task.items, candidates, custom_album)
+            rec = _recommendation(list(candidates.values()))
+            return Proposal(list(candidates.values()), rec)
+        else:
+            self._log.error(f"Asking a manual id that has issues. {search_id}")
+            return None
 
     def custom_query(self, session, task):
         """Get a new `Proposal` using a manually-entered ID.
@@ -85,13 +90,20 @@ class VGMdbPlugin(BeetsPlugin):
         prompt = "Enter {} query:".format("release" if task.is_album else "recording")
         query = input_(prompt).strip()
 
+        query_results = self._search_vgmdbinfo(query)
         candidates = {}
-        _add_candidate(
-            task.items, candidates, self._search_vgmdbinfo(query)[0]
-        )  # TODO add error handling
-        rec = _recommendation(list(candidates.values()))
+        if len(query_results)>0:
+            self._log.info(f'Found {len(query_results)} result for the query.'
+                           f' Selecting the first choice.')
+            _add_candidate(
+                task.items, candidates, query_results[0]
+            )  # TODO add error handling
+            rec = _recommendation(list(candidates.values()))
 
-        return Proposal(list(candidates.values()), rec)
+            return Proposal(list(candidates.values()), rec)
+        else:
+            self._log.warning(f"No query result for {query}")
+            return None
 
     def track_distance(self, item, info: TrackInfo) -> Distance:
         """
