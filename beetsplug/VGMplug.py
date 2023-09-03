@@ -24,7 +24,7 @@ class VGMdbPlugin(BeetsPlugin):
         # DEFAULT CONFIG
         self.config.add(
             {
-                "language-priority": ["english", "romaji", "japanese"],
+                "language-priority": ["english", "romaji", "japanese"], # for display
                 "source_weight": 0.0,
                 "album-title": {"search": True, "regex": ".*"},  # album title as is
                 "artist-name": {"search": True, "regex": ".*"},  # artist title as is
@@ -38,6 +38,7 @@ class VGMdbPlugin(BeetsPlugin):
 
         self.session = None
         self.register_listener("import_begin", self.setup)
+        self.register_listener("before_choose_candidate", self.before_choose_candidate_event)
 
     # BEETS
     # def track_distance(self, item, info):
@@ -46,7 +47,7 @@ class VGMdbPlugin(BeetsPlugin):
     # def album_distance(self, items, album_info, mapping):
     #     pass
 
-    def candidates(self, items, artist, album, va_likely, extra_tags=None):
+    def candidates(self, items, artist, album, va_likely, extra_tags=None) -> List[AlbumInfo]:
         self._log.debug(f"Searching for candidate in VGMdb for {album}")
         self.advanced_search(items, artist, album)
         print("ok")
@@ -131,24 +132,42 @@ class VGMdbPlugin(BeetsPlugin):
             "classification[2048]": "0",
             "classification[4096]": "0",
             "releasedatemodifier": "is",
-            "day": "0",
-            "month": "0",
-            "year": "0",
+            "day": "0", # TODO: add
+            "month": "0", # TODO: add
+            "year": "0", # TODO: add
             "sidesmodifier": "is",
             "sides": "",
             "discsmodifier": "is",
             "discs": "",
-            "sortby": "albumtitle",
-            "orderby": "ASC",
+            "sortby": "albumtitle", # TODO: add option
+            "orderby": "ASC", # TODO: add option
             "dosearch": "Search+Albums+Now",
         }
         response = self.session.post(self.SEARCH_URL, data=request_data)
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, "lxml")
+            list_of_candidates = self.parse_search_soup(soup)
         else:
             return []
 
-
+    def parse_search_soup(self, soup:BeautifulSoup):
+        list_of_result = []
+        result_table = soup.find("table", {"class":"tborder"})
+        result_rows = result_table.find_all("tr")
+        for row_soup in result_rows:
+            catalog_number = row_soup.find("span", {"class": "catalog"})
+            album_title = row_soup.find("a", {"class": "albumtitle"})
+            if catalog_number is not None: # is there if a catalog without we may have an error
+                list_of_result.append(
+                    {
+                        "href" : album_title["href"],
+                        "vgm_id": album_title["href"].split("/")[-1],
+                        "english_title": album_title.find("span", {"lang":"en"}).text if album_title.find("span", {"lang":"en"}) is not None else None,
+                        "romaji": album_title.find("span", {"lang":"ja-Latn"}).text if album_title.find("span", {"lang":"ja-Latn"}) is not None else None,
+                        "japanese": album_title.find("span", {"lang":"ja"}).text if album_title.find("span", {"lang":"ja"}) is not None else None,
+                    }
+                )
+        return list_of_result
 # class VGMdbPlugin(BeetsPlugin):
 #     data_source = "VGMdb"  # MetadataSourcePlugin
 #
