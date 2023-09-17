@@ -15,9 +15,15 @@ class VGMdbPlugin(BeetsPlugin):
     DATA_SOURCE = "VGMdb.net"
 
     SEARCH_URL = "https://vgmdb.net/search?do=results"
-
+    ALBUM_URL = "https://vgmdb.net/album/"
+    ID_PREFIX = "vgmdbid_"
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/117.0"
 
+    MAP = {"Catalog Number": "catalognum",
+           }
+
+    # TODO: parse Notes for track details
+    # TODO: add images
     def __init__(self):
         super().__init__()
 
@@ -40,6 +46,53 @@ class VGMdbPlugin(BeetsPlugin):
         self.register_listener("import_begin", self.setup)
         self.register_listener("before_choose_candidate", self.before_choose_candidate_event)
 
+    def before_choose_candidate_event(self, session, task):
+        if task.is_album:
+            return [
+                PromptChoice("v", "type Vgmdb id", self.insert_manual_id),
+                # PromptChoice("q", "type vgmdb Query", self.custom_query),
+            ]
+
+    def insert_manual_id(self, session, task):
+        """Get a new `Proposal` using a manually-entered ID.
+
+        Input an ID, either for an album ("release") or a track ("recording").
+        """
+        prompt = "Enter {} ID:".format("release" if task.is_album else "recording")
+        search_id = input_(prompt).strip()
+
+        candidates = {}
+
+        custom_album = self.album_for_id(self.ID_PREFIX+search_id)
+        if custom_album is not None:
+            _add_candidate(task.items, candidates, custom_album)
+            rec = _recommendation(list(candidates.values()))
+            return Proposal(list(candidates.values()), rec)
+        self._log.error(f"Asking a manual id that has issues. {search_id}")
+        return None
+
+    # def custom_query(self, session, task):
+    #     """Get a new `Proposal` using a manually-entered ID.
+    #
+    #     Input an ID, either for an album ("release") or a track ("recording").
+    #     """
+    #     prompt = "Enter {} query:".format("release" if task.is_album else "recording")
+    #     query = input_(prompt).strip()
+    #
+    #     query_results = self._search_vgmdbinfo(query)
+    #     candidates = {}
+    #     if len(query_results) > 0:
+    #         self._log.info(
+    #             f"Found {len(query_results)} result for the query." f" Selecting the first choice."
+    #         )
+    #         _add_candidate(task.items, candidates, query_results[0])  # TODO add error handling
+    #         rec = _recommendation(list(candidates.values()))
+    #
+    #         return Proposal(list(candidates.values()), rec)
+    #     else:
+    #         self._log.warning(f"No query result for {query}")
+    #         return None
+
     # BEETS
     # def track_distance(self, item, info):
     #     pass
@@ -49,14 +102,27 @@ class VGMdbPlugin(BeetsPlugin):
 
     def candidates(self, items, artist, album, va_likely, extra_tags=None) -> List[AlbumInfo]:
         self._log.debug(f"Searching for candidate in VGMdb for {album}")
-        self.advanced_search(items, artist, album)
-        print("ok")
+        candidates = self.advanced_search(items, artist, album)
+        return candidates
 
     # def item_candidates(self, item, artist, title):
     #     pass
     #
-    # def album_for_id(self, album_id):
-    #     pass
+    def album_for_id(self, album_id: str):
+        """
+        Fetch the album corresponding to a beets vgmdb plug id:
+        vgmdbid_{vgmdb_album_id}
+        :param album_id:
+        :return:
+        """
+        beets_parsed_id = album_id.split(self.ID_PREFIX)
+        if len(beets_parsed_id) == 2:
+            page_request = self.session.get(self.ALBUM_URL+beets_parsed_id[1])
+            page_request_soup = BeautifulSoup(page_request.text, "lxml")
+            album = self.parse_album_soup(page_request_soup)
+            return album
+        return None
+
 
     # HELPER FUNCTION
     def setup(self):
@@ -144,30 +210,120 @@ class VGMdbPlugin(BeetsPlugin):
             "dosearch": "Search+Albums+Now",
         }
         response = self.session.post(self.SEARCH_URL, data=request_data)
+        album_list = []
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, "lxml")
             list_of_candidates = self.parse_search_soup(soup)
-        else:
-            return []
+            for candidate in list_of_candidates:
+                album = self.album_for_id(candidate["vgm_id"])
+                if album is not None:
+                    album_list.append(album)
+        return album_list
 
     def parse_search_soup(self, soup:BeautifulSoup):
         list_of_result = []
         result_table = soup.find("table", {"class":"tborder"})
         result_rows = result_table.find_all("tr")
+        ref_list = []
         for row_soup in result_rows:
             catalog_number = row_soup.find("span", {"class": "catalog"})
             album_title = row_soup.find("a", {"class": "albumtitle"})
             if catalog_number is not None: # is there if a catalog without we may have an error
-                list_of_result.append(
-                    {
-                        "href" : album_title["href"],
-                        "vgm_id": album_title["href"].split("/")[-1],
-                        "english_title": album_title.find("span", {"lang":"en"}).text if album_title.find("span", {"lang":"en"}) is not None else None,
-                        "romaji": album_title.find("span", {"lang":"ja-Latn"}).text if album_title.find("span", {"lang":"ja-Latn"}) is not None else None,
-                        "japanese": album_title.find("span", {"lang":"ja"}).text if album_title.find("span", {"lang":"ja"}) is not None else None,
-                    }
-                )
+                if album_title["href"].split("/")[-1] not in ref_list:
+                    list_of_result.append(
+                        {
+                            "href" : album_title["href"],
+                            "vgm_id": self.ID_PREFIX+album_title["href"].split("/")[-1],
+                            "english_title": album_title.find("span", {"lang":"en"}).text if album_title.find("span", {"lang":"en"}) is not None else None,
+                            "romaji": album_title.find("span", {"lang":"ja-Latn"}).text if album_title.find("span", {"lang":"ja-Latn"}) is not None else None,
+                            "japanese": album_title.find("span", {"lang":"ja"}).text if album_title.find("span", {"lang":"ja"}) is not None else None,
+                        }
+                    )
+                    ref_list.append(album_title["href"].split("/")[-1])
         return list_of_result
+
+
+    def parse_album_soup(self,page_request_soup:BeautifulSoup)->Optional[AlbumInfo]:
+        """
+
+        :param page_request_soup:
+        :return:
+        """
+        album_info = None
+        try:
+            innermain = page_request_soup.find("div", {"id":"innermain"})
+            album_infobit = innermain.find("table", {"id":"album_infobit_large"})
+            credits = innermain.find("div", {"id":"collapse_credits"})
+            tracks_head = innermain.find("ul", {"id":"tlnav"})
+            tracks = innermain.find("div", {"id":"tracklist"})
+            notes = innermain.find("div", {"id":"collapse_notes"})
+
+            ### ALBUM DETAILS
+            info_dict = self.parse_infobit(album_infobit)
+            credit_dict = self.parse_credits(credits)
+            tracks_dict = self.parse_tracks(tracks, tracks_head, notes)
+        except TypeError as e:
+            self._log.error(f"Type Error while parsing vgmdb.net: {e}")
+            return None
+        return album_info
+
+    def parse_infobit(self, infobit_soup:BeautifulSoup)->Dict:
+        """
+
+        :param infobit_soup:
+        :return:
+        """
+        info_dict = {}
+        all_rows = infobit_soup.find_all("tr")
+        for row_soup in all_rows:
+            columns = row_soup.find_all("td")
+            if len(columns)>1:
+                key_name = ""
+                key_value = ""
+                for idx,column in enumerate(columns):
+                    key = (idx%2==0)
+
+                    if column.span is not None:
+                        text = column.span.text
+                    else:
+                        text = column.text
+                    if key == True:
+                        key_name = text
+                    else:
+                        key_value = text
+                        info_dict[key_name]=key_value
+        return info_dict
+
+    def parse_credits(self, credits:BeautifulSoup)->Dict:
+        """
+
+        :param credits:
+        :return:
+        """
+        table = credits.find("table", {"id":"album_infobit_large"})
+        credit_dict = {}
+        for rows in table.find_all("tr"):
+            columns = rows.find_all("td")
+            column_name = columns[0].text.split("/")[0].strip()
+            value = columns[1].text.split(", ") # here you may find href
+            credit_dict[column_name]=value
+        return credit_dict
+
+    def parse_tracks(self, track_soup:BeautifulSoup,tracks_head:BeautifulSoup, note_soup:BeautifulSoup)->List[TrackInfo]:
+        tracks_head.find_all("li")
+        header_map = {key: value.text for key, value in enumerate(tracks_head.find_all("li"))}
+        block_of_value = track_soup.find_all("span", {"class":"tl"})
+        return
+
+    def map(self, info_dict:Dict):
+        """
+
+        :param info_dict:
+        :return:
+        """
+        return {self.MAP[key]:value for key, value in info_dict.items() if key in self.MAP}
+
+
 # class VGMdbPlugin(BeetsPlugin):
 #     data_source = "VGMdb"  # MetadataSourcePlugin
 #
@@ -244,12 +400,7 @@ class VGMdbPlugin(BeetsPlugin):
 #         return None
 #
 #     # RELATED
-#     def before_choose_candidate_event(self, session, task):
-#         if task.is_album:
-#             return [
-#                 PromptChoice("v", "type Vgmdb id", self.insert_manual_id),
-#                 PromptChoice("q", "type vgmdb Query", self.custom_query),
-#             ]
+
 #
 #     # PLUGIN
 #     def parse_vgmdbinfo_artist(self, albuminfo, key, optional_album):
@@ -278,46 +429,9 @@ class VGMdbPlugin(BeetsPlugin):
 #             va = True
 #         return artist_found, main_artist, main_artist_id, va
 #
-#     def insert_manual_id(self, session, task):
-#         """Get a new `Proposal` using a manually-entered ID.
+
 #
-#         Input an ID, either for an album ("release") or a track ("recording").
-#         """
-#         prompt = "Enter {} ID:".format("release" if task.is_album else "recording")
-#         search_id = input_(prompt).strip()
-#
-#         candidates = {}
-#
-#         custom_album = self.album_for_id(search_id)
-#         if custom_album is not None:
-#             _add_candidate(task.items, candidates, custom_album)
-#             rec = _recommendation(list(candidates.values()))
-#             return Proposal(list(candidates.values()), rec)
-#         else:
-#             self._log.error(f"Asking a manual id that has issues. {search_id}")
-#             return None
-#
-#     def custom_query(self, session, task):
-#         """Get a new `Proposal` using a manually-entered ID.
-#
-#         Input an ID, either for an album ("release") or a track ("recording").
-#         """
-#         prompt = "Enter {} query:".format("release" if task.is_album else "recording")
-#         query = input_(prompt).strip()
-#
-#         query_results = self._search_vgmdbinfo(query)
-#         candidates = {}
-#         if len(query_results) > 0:
-#             self._log.info(
-#                 f"Found {len(query_results)} result for the query." f" Selecting the first choice."
-#             )
-#             _add_candidate(task.items, candidates, query_results[0])  # TODO add error handling
-#             rec = _recommendation(list(candidates.values()))
-#
-#             return Proposal(list(candidates.values()), rec)
-#         else:
-#             self._log.warning(f"No query result for {query}")
-#             return None
+
 #
 #     def _search_vgmdbinfo(self, query: str):
 #         """
