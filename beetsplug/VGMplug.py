@@ -301,7 +301,7 @@ class VGMdbPlugin(BeetsPlugin):
             artist=main_artist,
             artist_id=main_artist_id,
             asin=None,
-            albumtype=None,
+            albumtype=albuminfo.get("classification", None),
             va=va,
             year=year,
             month=month,
