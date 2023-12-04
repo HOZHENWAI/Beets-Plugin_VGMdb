@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 [comment]: <> (### Changed)
  
 [comment]: <> (### Fixed)
+## [1.2.8] - 04-12-2023 
+Added albumtype info.
+
 ## [1.2.4] - 05-03-2022 
 Bugfix: Solved some blocking issues with the plugins.
 

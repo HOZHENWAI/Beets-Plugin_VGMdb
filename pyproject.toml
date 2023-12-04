@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "beets-vgmdb"
-version = "1.2.7"
+version = "1.2.8"
 authors = [{name="HO ZhenWai Olivier", email="hozhenwai@gmail.com"}]
 description = "Beets VGMdb metadata plugin and collection manager."
 readme = "README.md"
