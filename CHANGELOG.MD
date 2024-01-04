@@ -22,8 +22,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 [comment]: <> (  PATCH Ticket title goes here.)
  
 [comment]: <> (### Changed)
- 
+
 [comment]: <> (### Fixed)
+## [1.3.0] - 04-01-2024
+Make auto import optional.
+
 ## [1.2.8] - 04-12-2023 
 Added albumtype info.
 

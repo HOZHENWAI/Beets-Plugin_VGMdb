@@ -22,12 +22,15 @@ class VGMdbPlugin(BeetsPlugin):
         super(VGMdbPlugin, self).__init__()
         self._log.setLevel("ERROR")
         self.config.add({"lang-priority": "en,ja-latn,ja", "source_weight": 0.0})
-
+        self.config.add({"autosearch": False})
         self.config.add({"artist-priority": "composers,performers,arrangers"})
+
         self.artist_priority = self.config["artist-priority"].get().replace(" ", "").split(",")
         self.source_weight = self.config["source_weight"].as_number()
         self.lang = self.config["lang-priority"].get().replace(" ", "").split(",")
         self.track_pref = [TRACK_NAME_CONVENTION[lang] for lang in self.lang]
+        self.auto = self.config["autosearch"].get()
+
         self.register_listener("before_choose_candidate", self.before_choose_candidate_event)
 
     def before_choose_candidate_event(self, session, task):
@@ -357,13 +360,15 @@ class VGMdbPlugin(BeetsPlugin):
         :param extra_tags:
         :return:
         """
-        self._log.debug(f"Searching for candidate in VGMdb for {album}")
-        albums = []
-        queries = self._format_query(artist, album, va_likely)
+        if self.auto:
+            self._log.debug(f"Searching for candidate in VGMdb for {album}")
+            albums = []
+            queries = self._format_query(artist, album, va_likely)
 
-        for query in queries:
-            albums += self._search_vgmdbinfo(query)
-        return albums
+            for query in queries:
+                albums += self._search_vgmdbinfo(query)
+            return albums
+        return []
 
     def _format_query(self, artist, album, va_likely) -> Iterable:
         """
