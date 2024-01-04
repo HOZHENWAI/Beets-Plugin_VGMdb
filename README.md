@@ -29,6 +29,7 @@ VGMplug Config:
     
     "artist-priority" : "composers,performers,arrangers"
     
+    "autosearch": false # or true
 VGMCollection config:
 
     "username": "ExampleLogin"
