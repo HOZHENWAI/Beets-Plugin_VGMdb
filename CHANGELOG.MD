@@ -22,22 +22,31 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 [comment]: <> (  PATCH Ticket title goes here.)
  
 [comment]: <> (### Changed)
-
+ 
 [comment]: <> (### Fixed)
+## [1.3.1] - 07-01-2024
+### Fixed 
+- missing published issue
+### Added
+- cover art url
 ## [1.3.0] - 04-01-2024
+### Changed
 Make auto import optional.
 
 ## [1.2.8] - 04-12-2023 
+### Added
 Added albumtype info.
 
 ## [1.2.4] - 05-03-2022 
-Bugfix: Solved some blocking issues with the plugins.
+### Fixed
+Solved some blocking issues with the plugins.
 
 ## [1.2.3] - 31-08-2022 
-Bugfix: language not being properly used to select title
+### Fixed
+Language not being properly used to select title
 
 ## [1.2.2] - 31-08-2022 
-Fixed:
+### Fixed
 Language not being taken into account and additional name for tracks not being properly passed.
 
 ## [1.2.0] - 22-07-2022
