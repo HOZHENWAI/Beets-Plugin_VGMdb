@@ -333,6 +333,7 @@ class VGMdbPlugin(BeetsPlugin):
             original_day=None,
             data_source=self.data_source,
             data_url=albuminfo["vgmdb_link"],
+            cover_art_url=albuminfo["picture_full"] if "picture_full" in albuminfo else None,
             **optional_album,
         )
 
