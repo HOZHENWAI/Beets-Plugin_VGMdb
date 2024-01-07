@@ -288,6 +288,10 @@ class VGMdbPlugin(BeetsPlugin):
             day = None
 
         # label
+        if not "publisher" in albuminfo: # example: https://vgmdb.net/album/36099
+            albuminfo["publisher"] = { "link": {}, "names": {}, "role": {} }
+            if "distributor" in albuminfo:
+                albuminfo["publisher"] = albuminfo["distributor"]
         publisher = (
             list(albuminfo["publisher"]["names"].values())[0]
             if len(albuminfo["publisher"]["names"]) > 0
