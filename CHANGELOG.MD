@@ -24,6 +24,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 [comment]: <> (### Changed)
  
 [comment]: <> (### Fixed)
+## [1.3.2] - 03-04-2025
+### Fixed 
+- added user-agent to the request
+### Added
+- added an example docker-compose to self-host vmgdb.info
+
 ## [1.3.1] - 07-01-2024
 ### Fixed 
 - missing published issue
