@@ -10,6 +10,13 @@ It can:
     - log to your vgmdb account and on album import (where the data source came from vgmdb) add the album to your account
     - add new option to give vgmdb id or search vgmdb using a query 
 
+By default, we are using the api provided by hufman (third party) hosted at https://vgmdb.info.
+It's possible to change the target address with a selfhosted instance of vgmdb.info if you use the provided docker-compose (selfishly copied from his project)
+```
+docker-compose up
+```
+then configure the base url in your beets config.
+
 ### Configuration:
 There are two plugin name for different feature:
 - VGMplug
@@ -22,14 +29,15 @@ plugins: VGMplug VGMCollection
 Options are given below:
 
 VGMplug Config:
-
-    "lang-priority": 'en, ja-latn, ja'
+```
+VGMplug:
+    lang-priority: 'en, ja-latn, ja'
+    source_weight: 0.0
+    artist-priority : "composers,performers,arrangers"
+    autosearch: false # or true
+    baseurl: "YOUR LOCAL VGMDB.info INSTANCE URL"
+```
     
-    "source_weight": 0.0
-    
-    "artist-priority" : "composers,performers,arrangers"
-    
-    "autosearch": false # or true
 VGMCollection config:
 
     "username": "ExampleLogin"
@@ -40,6 +48,13 @@ VGMCollection config:
 Installation:
 
 https://beets.readthedocs.io/en/stable/plugins/index.html#other-plugins
+
+```
+pip install beets-vgmdb
+```
+
+
+
 
 ## Note on using VGMplug with the plugin `albumtype`
 The list of possible albumtype given by VGMdb is:

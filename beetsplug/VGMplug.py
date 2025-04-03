@@ -14,15 +14,20 @@ TRACK_NAME_CONVENTION = {"en": "English", "ja-latn": "Romaji", "ja": "Japanese"}
 class VGMdbPlugin(BeetsPlugin):
     data_source = "VGMdb"  # MetadataSourcePlugin
 
-    search_url = "https://vgmdb.info/search/"
-    search_albums_url = "https://vgmdb.info/search/albums/"
-    album_url = "https://vgmdb.info/album/"
-
+    BASE_URL = "https://vgmdb.info"
+    USERAGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:114.0) Gecko/20100101 Firefox/114.0"
+    headers = {
+        "User-Agent": USERAGENT
+    }
     def __init__(self):
         super(VGMdbPlugin, self).__init__()
         self._log.setLevel("ERROR")
         self.config.add({"lang-priority": "en,ja-latn,ja", "source_weight": 0.0})
         self.config.add({"autosearch": False})
+        self.config.add({"baseurl": self.BASE_URL})
+        self.config.add({"searchalbumsurl": self.config['baseurl'].get().rstrip('/')+"/albums/"})
+        self.config.add({"search_url": self.config['baseurl'].get().rstrip('/')+"/search/"})
+        self.config.add({"albumurl": self.config['baseurl'].get().rstrip('/')+"/album/"})
         self.config.add({"artist-priority": "composers,performers,arrangers"})
 
         self.artist_priority = self.config["artist-priority"].get().replace(" ", "").split(",")
@@ -148,7 +153,7 @@ class VGMdbPlugin(BeetsPlugin):
         :return:
         """
         try:
-            req = requests.get(f"{self.search_albums_url}{query}?format=json")
+            req = requests.get(f"{self.config['searchalbumsurl'].get()}{query}?format=json", headers=self.headers)
             items = req.json()
             albums = []
             self._log.debug(
@@ -393,12 +398,12 @@ class VGMdbPlugin(BeetsPlugin):
         """
         self._log.debug(f"Querying VgmDB for release {album_id}")
         try:
-            req = requests.get(f"{self.album_url}{album_id}?format=json")
-            url = f"{self.album_url}{album_id}"
+            req = requests.get(f"{self.config['albumurl'].get()}{album_id}?format=json", headers=self.headers)
+            url = f"{self.config['albumurl'].get()}{album_id}"
             vgmdbinfo = req.json()
             return self.format_album_vgmdbinfo(vgmdbinfo, url=url)
-        except requests.exceptions.RequestException:
-            self._log.error(f"Network Problem: {album_id}")
-        except requests.exceptions.JSONDecodeError:
-            self._log.error(f"JsonDecodeError: {album_id}")
+        except requests.exceptions.RequestException as e:
+            self._log.error(f"Network Problem: {album_id} \n {e}")
+        except requests.exceptions.JSONDecodeError as e:
+            self._log.error(f"JsonDecodeError: {album_id} \n {e}")
         return None
