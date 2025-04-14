@@ -49,7 +49,7 @@ class VGMdbPlugin(BeetsPlugin):
         self._log.info(f"Completing artist info using {key}")
         artist_found = False
         va = False
-        if len(albuminfo[key]) > 0:
+        if len(albuminfo.get(key, [])) > 0:
             self._log.info(f"Found {len(albuminfo[key])} {key}")
             artist_found = True
             main_artist = list(albuminfo[key][0]["names"].values())[0]
@@ -65,9 +65,10 @@ class VGMdbPlugin(BeetsPlugin):
                     break
             optional_album.update(self.format_list_of_person(albuminfo[key], key))
         else:
+            self._log.info(f"{key} not found for this album.")
             main_artist = ""
             main_artist_id = None
-        if len(albuminfo["composers"]) > 1:
+        if len(albuminfo.get("composers", [])) > 1:
             va = True
         return artist_found, main_artist, main_artist_id, va
 
