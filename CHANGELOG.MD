@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 [comment]: <> (### Changed)
  
 [comment]: <> (### Fixed)
+## [1.3.3] - 14-04-2025
+### Fixed 
+- fixed an issue when an artist type was missing from the returned albuminfo
+
+
 ## [1.3.2] - 03-04-2025
 ### Fixed 
 - added user-agent to the request
