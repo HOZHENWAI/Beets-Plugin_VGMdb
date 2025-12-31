@@ -26,7 +26,7 @@ class VGMdbPlugin(BeetsPlugin):
         self.config.add({"lang-priority": "en,ja-latn,ja", "source_weight": 0.0})
         self.config.add({"autosearch": False})
         self.config.add({"baseurl": self.BASE_URL})
-        self.config.add({"searchalbumsurl": self.config['baseurl'].get().rstrip('/')+"/albums/"})
+        self.config.add({"searchalbumsurl": self.config['baseurl'].get().rstrip('/')+"/search/albums/"})
         self.config.add({"search_url": self.config['baseurl'].get().rstrip('/')+"/search/"})
         self.config.add({"albumurl": self.config['baseurl'].get().rstrip('/')+"/album/"})
         self.config.add({"artist-priority": "composers,performers,arrangers"})
