@@ -22,7 +22,6 @@ class VGMdbPlugin(BeetsPlugin):
     }
     def __init__(self):
         super(VGMdbPlugin, self).__init__()
-        # self._log.setLevel("ERROR")
         self.config.add({"lang-priority": "en,ja-latn,ja", "source_weight": 0.0})
         self.config.add({"autosearch": False})
         self.config.add({"baseurl": self.BASE_URL})
@@ -171,7 +170,7 @@ class VGMdbPlugin(BeetsPlugin):
                     break
             return albums
         except requests.exceptions.RequestException as e:
-            self._log.error(f"Network Exception: {query}, {e}")
+            self._log.error(f"Network Exception: {query}")
         except requests.exceptions.ChunkedEncodingError:
             self._log.error(f"Chunked Encoding Exception: {query}")
         except requests.exceptions.JSONDecodeError:
