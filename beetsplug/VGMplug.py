@@ -171,7 +171,7 @@ class VGMdbPlugin(BeetsPlugin):
                     break
             return albums
         except requests.exceptions.RequestException as e:
-            self._log.error(f"Network Exception: {query}")
+            self._log.error(f"Network Exception: {query}, {e}")
         except requests.exceptions.ChunkedEncodingError:
             self._log.error(f"Chunked Encoding Exception: {query}")
         except requests.exceptions.JSONDecodeError:
