@@ -4,7 +4,8 @@ import requests.exceptions
 import re
 
 from beets.plugins import BeetsPlugin
-from beets.autotag.hooks import AlbumInfo, TrackInfo, Distance, string_dist
+from beets.autotag.hooks import AlbumInfo, TrackInfo, string_dist
+from beets.autotag.distance import Distance
 from beets.ui.commands import PromptChoice, input_
 from beets.autotag.match import Proposal, _add_candidate, _recommendation
 
