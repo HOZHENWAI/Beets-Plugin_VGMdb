@@ -4,7 +4,8 @@ import requests.exceptions
 import re
 
 from beets.plugins import BeetsPlugin
-from beets.autotag.hooks import AlbumInfo, TrackInfo, Distance, string_dist
+from beets.autotag.hooks import AlbumInfo, TrackInfo
+from beets.autotag.distance import Distance, string_dist
 from beets.ui.commands import PromptChoice, input_
 from beets.autotag.match import Proposal, _add_candidate, _recommendation
 
@@ -21,11 +22,10 @@ class VGMdbPlugin(BeetsPlugin):
     }
     def __init__(self):
         super(VGMdbPlugin, self).__init__()
-        self._log.setLevel("ERROR")
         self.config.add({"lang-priority": "en,ja-latn,ja", "source_weight": 0.0})
         self.config.add({"autosearch": False})
         self.config.add({"baseurl": self.BASE_URL})
-        self.config.add({"searchalbumsurl": self.config['baseurl'].get().rstrip('/')+"/albums/"})
+        self.config.add({"searchalbumsurl": self.config['baseurl'].get().rstrip('/')+"/search/albums/"})
         self.config.add({"search_url": self.config['baseurl'].get().rstrip('/')+"/search/"})
         self.config.add({"albumurl": self.config['baseurl'].get().rstrip('/')+"/album/"})
         self.config.add({"artist-priority": "composers,performers,arrangers"})
