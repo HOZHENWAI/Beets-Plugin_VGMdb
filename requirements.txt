@@ -1,5 +1,5 @@
 requests
 pathlib
-beets>=2.4.0
+beets>=2.6.0
 beautifulsoup4
 lxml

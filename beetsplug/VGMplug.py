@@ -6,8 +6,9 @@ import re
 from beets.plugins import BeetsPlugin
 from beets.autotag.hooks import AlbumInfo, TrackInfo
 from beets.autotag.distance import Distance, string_dist
-from beets.ui.commands import PromptChoice, input_
 from beets.autotag.match import Proposal, _add_candidate, _recommendation
+from beets.ui import input_
+from beets.util import PromptChoice
 
 TRACK_NAME_CONVENTION = {"en": "English", "ja-latn": "Romaji", "ja": "Japanese"}
 
